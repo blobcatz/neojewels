@@ -1,0 +1,23 @@
+#root {
+  width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url('./assets/background.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color: #1a1a1a;
+  color: white;
+  position: relative;
+}
+
+[alt="NeoJewels"] {
+  height: 10em;
+  padding: 1.5em;
+}

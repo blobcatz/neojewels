@@ -1,0 +1,451 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+body {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+}
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: white;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 400px;
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+}
+
+.score, .timer, .hints {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hint-icon {
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #FFD700;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint-icon:hover:not(.disabled) {
+  transform: scale(1.1);
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+}
+
+.hint-icon.disabled {
+  cursor: not-allowed;
+  filter: grayscale(1) opacity(0.5);
+}
+
+.hint-icon .icon {
+  color: #FFD700;
+}
+
+.hints {
+  display: flex;
+  align-items: center;
+}
+
+.hints-count {
+  font-size: 1.4rem;
+  color: #FFD700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.game-board {
+  background-image: url('../assets/board.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 10px rgba(0, 0, 0, 0.5));
+  padding: 1rem;
+  perspective: 1000px;
+}
+
+.board-row {
+  display: flex;
+}
+
+.jewel {
+  width: 50px;
+  height: 50px;
+  margin: 2px;
+  border-radius: 8px;
+  cursor: pointer;
+  filter: drop-shadow(0 2px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: none; /* Prevent scrolling while dragging on touch devices */
+}
+
+/* Random size classes - very subtle variations */
+.size-1 { --size-scale: 0.96; }
+.size-2 { --size-scale: 0.98; }
+.size-3 { --size-scale: 1.0; }
+.size-4 { --size-scale: 1.02; }
+.size-5 { --size-scale: 1.04; }
+
+/* Rotation classes */
+.rotate-1 { --rotation-angle: -5deg; }
+.rotate-2 { --rotation-angle: -3deg; }
+.rotate-3 { --rotation-angle: -1deg; }
+.rotate-4 { --rotation-angle: 1deg; }
+.rotate-5 { --rotation-angle: 3deg; }
+.rotate-6 { --rotation-angle: 5deg; }
+
+/* Apply combined transforms */
+.jewel {
+  transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+}
+
+.jewel.swapping {
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.jewel.swap-failed {
+  z-index: 2;
+  animation: swapFailed 0.5s cubic-bezier(0.36, 0, 0.66, -0.56);
+}
+
+.jewel:hover {
+  --size-scale: 1.1;
+  --rotation-angle: 0deg;
+  z-index: 1;
+  filter: brightness(1.2);
+}
+
+.jewel.selected {
+  --size-scale: 1.1;
+  --rotation-angle: 0deg;
+  animation: shake 0.5s ease infinite;
+  filter: brightness(1.3);
+  z-index: 2;
+}
+
+.jewel.adjacent {
+  animation: adjacentShake 1.2s ease-in-out infinite;
+  filter: brightness(1.1);
+  z-index: 1;
+}
+
+.jewel.matched {
+  animation: explode 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards !important;
+  z-index: 2;
+}
+
+.jewel.falling {
+  animation: fall 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+  z-index: 1;
+}
+
+/* Ensure board-shake doesn't override rotation */
+.jewel.board-shake:not(.matched):not(.falling) {
+  animation: boardShake 0.5s ease;
+}
+
+/* Ensure hint doesn't override rotation */
+.jewel.hint:not(.matched):not(.falling) {
+  animation: pulse 1s infinite;
+}
+
+.red {
+  background-image: url('../assets/jewels/one.png');
+}
+
+.blue {
+  background-image: url('../assets/jewels/two.png');
+}
+
+.green {
+  background-image: url('../assets/jewels/three.png');
+}
+
+.yellow {
+  background-image: url('../assets/jewels/four.png');
+}
+
+.purple {
+  background-image: url('../assets/jewels/five.png');
+}
+
+.orange {
+  background-image: url('../assets/jewels/six.png');
+}
+
+.hint-button {
+  display: none;
+}
+
+.game-over {
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  animation: fadeIn 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.game-over h2 {
+  font-size: 2.5rem;
+  margin-bottom: 0;
+  color: #ff4d4d;
+}
+
+.game-over p {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.share-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 1rem;
+}
+
+.share-section h3 {
+  color: #FFD700;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.share-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.instance-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #4CAF50;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-family: inherit;
+}
+
+.instance-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.instance-input:focus {
+  outline: none;
+  border-color: #45a049;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+.share-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.share-button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.share-button:active {
+  transform: scale(0.95);
+}
+
+.reset-button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.reset-button:hover {
+  transform: scale(1.1);
+}
+
+.timer {
+  font-family: monospace;
+  font-size: 1.4rem;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(0, 0);
+  }
+  25% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-3px, 0);
+  }
+  75% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(3px, 0);
+  }
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    opacity: 1;
+    filter: brightness(1.5) drop-shadow(0 0 10px currentColor);
+  }
+  50% {
+    transform: scale(calc(var(--size-scale, 1) * 1.8)) rotate(calc(var(--rotation-angle, 0deg) + 180deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    opacity: 0.8;
+    filter: brightness(2) drop-shadow(0 0 20px currentColor);
+  }
+  100% {
+    transform: scale(0) rotate(calc(var(--rotation-angle, 0deg) + 360deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    opacity: 0;
+    filter: brightness(3) drop-shadow(0 0 30px currentColor);
+  }
+}
+
+@keyframes fall {
+  0% {
+    transform: scale(var(--size-scale, 1)) translateY(var(--fall-distance, -50px)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(var(--size-scale, 1)) translateY(0) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    opacity: 1;
+  }
+}
+
+@keyframes boardShake {
+  0%, 100% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(0, 0);
+  }
+  20% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-2px, 0);
+  }
+  40% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(2px, 0);
+  }
+  60% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-1px, 0);
+  }
+  80% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(1px, 0);
+  }
+}
+
+@keyframes swapFailed {
+  0%, 100% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  }
+  25% {
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 5deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  }
+  75% {
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 5deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  70% {
+    transform: scale(calc(var(--size-scale, 1) * 1.1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    filter: brightness(1.3) drop-shadow(0 0 15px currentColor);
+  }
+  100% {
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+}
+
+@keyframes adjacentShake {
+  0%, 100% {
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 1deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  }
+  50% {
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 1deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  }
+}
+
+.jewel.dragging {
+  opacity: 0.6;
+  --size-scale: 1.2;
+  --rotation-angle: 0deg;
+  z-index: 1000;
+  cursor: grabbing;
+  filter: brightness(1.3) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.jewel.drag-target {
+  --size-scale: 1.1;
+  --rotation-angle: 0deg;
+  z-index: 999;
+  filter: brightness(1.2) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: dragTargetPulse 1s ease-in-out infinite;
+}
+
+@keyframes dragTargetPulse {
+  0%, 100% {
+    filter: brightness(1.2) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  }
+  50% {
+    filter: brightness(1.4) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) rotate(var(--initial-rotation, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(var(--initial-rotation, 0deg));
+  }
+} 
