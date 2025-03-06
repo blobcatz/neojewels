@@ -413,7 +413,7 @@ const Game = () => {
     }
 
     try {
-      const shareText = `Just scored ${gameState.score} in #NeoJewels!`;
+      const shareText = `Just scored ${gameState.score} in #NeoJewels! https://blobcatz.github.io/neojewels/`;
       const shareUrl = new URL('/share', fullUrl);
       shareUrl.searchParams.set('text', shareText);
       
