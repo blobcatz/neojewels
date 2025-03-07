@@ -8,6 +8,7 @@ import {
   removeMatches,
   findPossibleMoves
 } from '../utils/gameUtils';
+import { playMoveSound, playErrorSound, playGameOverSound, playMatchSound } from '../utils/soundUtils';
 import './Game.css';
 import React from 'react';
 import Menu from './Menu';
@@ -134,6 +135,7 @@ const Game = () => {
         setGameState(prev => {
           const newTime = prev.timeRemaining - 1;
           if (newTime <= 0) {
+            playGameOverSound();
             return {
               ...prev,
               timeRemaining: 0,
@@ -159,6 +161,9 @@ const Game = () => {
   const checkAndRemoveMatches = (board: Jewel[][]) => {
     const matches = findMatches(board);
     if (matches.length > 0) {
+      // Play match sound
+      playMatchSound();
+
       // Flatten matches array for animation
       const matchedPositions = matches.flat();
       setMatchedJewels(matchedPositions);
@@ -244,6 +249,7 @@ const Game = () => {
 
     if (hasMatches) {
       // Successful swap
+      playMoveSound();
       setTimeout(() => {
         setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
         setGameState(prev => ({
@@ -254,6 +260,7 @@ const Game = () => {
       }, ANIMATION_DURATION);
     } else {
       // Failed swap
+      playErrorSound();
       setTimeout(() => {
         setSwapAnimation(prev => ({ ...prev, isFailing: true }));
         
