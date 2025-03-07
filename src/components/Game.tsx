@@ -13,8 +13,8 @@ import './Game.css';
 import React from 'react';
 import Menu from './Menu';
 
-const INITIAL_TIME = 120; // 2 minutes in seconds
-const TIME_BONUS = 2; // seconds added per successful match
+const INITIAL_TIME = 60; // 2 minutes in seconds
+const TIME_BONUS = 1; // seconds added per successful match
 const ANIMATION_DURATION = 500; // Duration of animations in milliseconds
 const FALL_DELAY = 50; // Delay between each falling jewel
 
@@ -65,8 +65,8 @@ const Game = () => {
   const [gameState, setGameState] = useState<GameState>({
     board: createBoard(),
     score: 0,
-    hintsRemaining: 3,
-    shufflesRemaining: 3,
+    hintsRemaining: 2,
+    shufflesRemaining: 2,
     selectedJewel: null,
     gameOver: false,
     timeRemaining: INITIAL_TIME,
@@ -77,6 +77,7 @@ const Game = () => {
   const [matchedJewels, setMatchedJewels] = useState<Position[]>([]);
   const [fallingJewels, setFallingJewels] = useState<FallingJewel[]>([]);
   const [isShaking, setIsShaking] = useState(false);
+  const [isUserMatch, setIsUserMatch] = useState(false);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     startPosition: null,
@@ -201,13 +202,14 @@ const Game = () => {
           ...prev,
           board: newBoard,
           score: prev.score + matches.reduce((acc, match) => acc + match.length, 0) * 10,
-          timeRemaining: Math.min(prev.timeRemaining + TIME_BONUS, INITIAL_TIME)
+          timeRemaining: isUserMatch ? Math.min(prev.timeRemaining + TIME_BONUS, INITIAL_TIME) : prev.timeRemaining
         }));
 
         // Reset falling animation after the longest delay
         const maxDelay = Math.max(...fallingPositions.map(pos => pos.fallDelay));
         setTimeout(() => {
           setFallingJewels([]);
+          setIsUserMatch(false); // Reset the user match flag after animations
         }, ANIMATION_DURATION + maxDelay);
       }, ANIMATION_DURATION);
 
@@ -250,6 +252,7 @@ const Game = () => {
     if (hasMatches) {
       // Successful swap
       playMoveSound();
+      setIsUserMatch(true); // Mark this as a user-initiated match
       setTimeout(() => {
         setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
         setGameState(prev => ({
@@ -374,8 +377,8 @@ const Game = () => {
       isInMenu: false,
       board: createBoard(),
       score: 0,
-      hintsRemaining: 3,
-      shufflesRemaining: 3,
+      hintsRemaining: 2,
+      shufflesRemaining: 2,
       selectedJewel: null,
       gameOver: false,
       timeRemaining: INITIAL_TIME,
@@ -388,8 +391,8 @@ const Game = () => {
       ...prev,
       board: createBoard(),
       score: 0,
-      hintsRemaining: 3,
-      shufflesRemaining: 3,
+      hintsRemaining: 2,
+      shufflesRemaining: 2,
       selectedJewel: null,
       gameOver: false,
       timeRemaining: INITIAL_TIME,
@@ -399,9 +402,7 @@ const Game = () => {
   };
 
   const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${seconds}s`;
   };
 
   const isJewelMatched = (row: number, col: number): boolean => {
