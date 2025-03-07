@@ -13,7 +13,14 @@ const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
       <button className="start-button" onClick={onStartGame}>
         Start Game
       </button>
-      <p className="credits">Neofox and Neocat emotes by <a href="https://volpeon.ink/">Volpeon</a> | v1.1 <a href="https://github.com/blobcatz/neojewels">Source Code</a></p>
+      <p className="subtitle creditsTitle">Credits</p>
+      <p className="credits"><a href="https://volpeon.ink/emojis/neofox/">Neofox</a> and <a href="https://volpeon.ink/emojis/neocat/">Neocat</a> by <a href="https://volpeon.ink/">Volpeon</a><br></br>
+      <a href="https://git.gay/av70/neomouse">Neomouse</a> by <a href="https://akko.eepy.zone/wep">Wep</a><br></br>
+      <a href="https://github.com/olivvybee/emojis">Neobread</a> by <a href="https://honeycomb.engineer/@olivvybee">olivvybee</a><br></br>
+      <a href="https://github.com/SymTrkl/emoji">Neobot</a> by <a href="https://anarres.family/@SymTrkl">Jen</a> with contributions by <a href="https://kitty.social/@o76923">James</a><br></br>
+      <a href="https://git.gay/moonrabbits/neodog">Neodog</a> by <a href="https://shonk.phite.ro/@moonrabbits">Moonrabbits</a><br></br>
+      </p>
+      <p className="credits">v1.1 | <a href="https://github.com/blobcatz/neojewels">Source Code</a></p>
     </div>
   );
 };

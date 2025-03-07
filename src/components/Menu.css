@@ -24,6 +24,10 @@
   color: rgb(0 153 255);
 }
 
+.creditsTitle {
+  margin-bottom: 0;
+}
+
 .credits {
   color: rgb(0, 0, 0);
   font-size: .9rem;
