@@ -211,6 +211,10 @@ body {
   background-image: url('../assets/jewels/six.png');
 }
 
+.pink {
+  background-image: url('../assets/jewels/seven.png');
+}
+
 .hint-button {
   display: none;
 }

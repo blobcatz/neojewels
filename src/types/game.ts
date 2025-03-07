@@ -1,4 +1,4 @@
-export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange';
+export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink';
 
 export interface Position {
   row: number;

@@ -3,7 +3,7 @@ import { Jewel, JewelType, Position } from '../types/game';
 const BOARD_SIZE = 8;
 const MATCH_MIN = 3;
 
-export const JEWEL_TYPES: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'];
+export const JEWEL_TYPES: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
 
 let nextJewelId = 1;
 
