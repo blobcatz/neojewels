@@ -216,7 +216,7 @@ body {
 }
 
 .game-over {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: white;
   padding: 2rem;
   border-radius: 16px;
   text-align: center;
@@ -236,6 +236,7 @@ body {
 .game-over p {
   font-size: 1.5rem;
   margin: 0;
+  color: #0099ff;
 }
 
 .share-section {
@@ -248,7 +249,7 @@ body {
 }
 
 .share-section h3 {
-  color: #FFD700;
+  color: #0099ff;
   margin: 0;
   font-size: 1.2rem;
 }
@@ -264,7 +265,7 @@ body {
   font-size: 1rem;
   border: 2px solid #4CAF50;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgb(88 185 92);
   color: white;
   font-family: inherit;
 }
