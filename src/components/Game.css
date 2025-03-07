@@ -20,7 +20,18 @@ body {
   font-size: 1.2rem;
 }
 
-.score, .timer, .hints {
+.score, .timer, .game-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.hints, .shuffles {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -40,7 +51,7 @@ body {
   height: 100%;
 }
 
-.hint-icon {
+.hint-icon, .shuffle-icon {
   width: 32px;
   height: 32px;
   cursor: pointer;
@@ -52,26 +63,21 @@ body {
   justify-content: center;
 }
 
-.hint-icon:hover:not(.disabled) {
+.hint-icon:hover:not(.disabled), .shuffle-icon:hover:not(.disabled) {
   transform: scale(1.1);
   filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
 }
 
-.hint-icon.disabled {
+.hint-icon.disabled, .shuffle-icon.disabled {
   cursor: not-allowed;
   filter: grayscale(1) opacity(0.5);
 }
 
-.hint-icon .icon {
+.hint-icon .icon, .shuffle-icon .icon {
   color: #FFD700;
 }
 
-.hints {
-  display: flex;
-  align-items: center;
-}
-
-.hints-count {
+.hints-count, .shuffles-count {
   font-size: 1.4rem;
   color: #FFD700;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);

@@ -14,8 +14,10 @@ export interface GameState {
   board: Jewel[][];
   score: number;
   hintsRemaining: number;
+  shufflesRemaining: number;
   selectedJewel: Position | null;
   gameOver: boolean;
   timeRemaining: number;
   isGameActive: boolean;
+  isInMenu: boolean;
 } 

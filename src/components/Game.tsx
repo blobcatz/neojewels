@@ -10,6 +10,7 @@ import {
 } from '../utils/gameUtils';
 import './Game.css';
 import React from 'react';
+import Menu from './Menu';
 
 const INITIAL_TIME = 120; // 2 minutes in seconds
 const TIME_BONUS = 2; // seconds added per successful match
@@ -52,15 +53,24 @@ const LightbulbIcon = () => (
   </svg>
 );
 
+const ShuffleIcon = () => (
+  <svg className="icon" viewBox="0 0 24 24" fill="none" color="currentColor">
+    <path d="M19.5576 4L20.4551 4.97574C20.8561 5.41165 21.0566 5.62961 20.9861 5.81481C20.9155 6 20.632 6 20.0649 6C18.7956 6 17.2771 5.79493 16.1111 6.4733C15.3903 6.89272 14.8883 7.62517 14.0392 9M3 18H4.58082C6.50873 18 7.47269 18 8.2862 17.5267C9.00708 17.1073 9.50904 16.3748 10.3582 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M19.5576 20L20.4551 19.0243C20.8561 18.5883 21.0566 18.3704 20.9861 18.1852C20.9155 18 20.632 18 20.0649 18C18.7956 18 17.2771 18.2051 16.1111 17.5267C15.2976 17.0534 14.7629 16.1815 13.6935 14.4376L10.7038 9.5624C9.63441 7.81853 9.0997 6.9466 8.2862 6.4733C7.47269 6 6.50873 6 4.58082 6H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+);
+
 const Game = () => {
   const [gameState, setGameState] = useState<GameState>({
     board: createBoard(),
     score: 0,
     hintsRemaining: 3,
+    shufflesRemaining: 3,
     selectedJewel: null,
     gameOver: false,
     timeRemaining: INITIAL_TIME,
-    isGameActive: true
+    isGameActive: true,
+    isInMenu: true
   });
 
   const [matchedJewels, setMatchedJewels] = useState<Position[]>([]);
@@ -313,19 +323,72 @@ const Game = () => {
     }
   };
 
-  const resetGame = () => {
-    setGameState({
+  const shuffleBoard = () => {
+    if (gameState.shufflesRemaining > 0 && gameState.isGameActive) {
+      // Create a new board with the same jewels but in random positions
+      const allJewels = gameState.board.flat();
+      let newBoard: Jewel[][] = [];
+      let attempts = 0;
+      const MAX_ATTEMPTS = 100; // Prevent infinite loop
+
+      do {
+        // Shuffle the jewels
+        const shuffledJewels = [...allJewels].sort(() => Math.random() - 0.5);
+        
+        // Create new board
+        newBoard = [];
+        for (let row = 0; row < gameState.board.length; row++) {
+          newBoard[row] = [];
+          for (let col = 0; col < gameState.board[row].length; col++) {
+            newBoard[row][col] = shuffledJewels[row * gameState.board[row].length + col];
+          }
+        }
+
+        attempts++;
+      } while (findMatches(newBoard).length > 0 && attempts < MAX_ATTEMPTS);
+
+      // If we couldn't find a valid arrangement after max attempts,
+      // create a completely new board instead
+      if (attempts >= MAX_ATTEMPTS) {
+        newBoard = createBoard();
+      }
+
+      setGameState(prev => ({
+        ...prev,
+        board: newBoard,
+        shufflesRemaining: prev.shufflesRemaining - 1
+      }));
+    }
+  };
+
+  const startGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      isInMenu: false,
       board: createBoard(),
       score: 0,
       hintsRemaining: 3,
+      shufflesRemaining: 3,
       selectedJewel: null,
       gameOver: false,
       timeRemaining: INITIAL_TIME,
       isGameActive: true
-    });
-    setMatchedJewels([]);
-    setFallingJewels([]);
-    setIsShaking(false);
+    }));
+  };
+
+  const resetGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      board: createBoard(),
+      score: 0,
+      hintsRemaining: 3,
+      shufflesRemaining: 3,
+      selectedJewel: null,
+      gameOver: false,
+      timeRemaining: INITIAL_TIME,
+      isGameActive: true,
+      isInMenu: true
+    }));
   };
 
   const formatTime = (seconds: number): string => {
@@ -425,7 +488,9 @@ const Game = () => {
 
   return (
     <div className="game-container">
-      {gameState.gameOver ? (
+      {gameState.isInMenu ? (
+        <Menu onStartGame={startGame} />
+      ) : gameState.gameOver ? (
         <div className="game-over">
           <h2>Game Over!</h2>
           <p>final score: {gameState.score}</p>
@@ -464,17 +529,31 @@ const Game = () => {
               <ClockIcon />
               {formatTime(gameState.timeRemaining)}
             </div>
-            <div className="hints">
-              <div
-                className={`hint-icon ${gameState.hintsRemaining === 0 || !gameState.isGameActive ? 'disabled' : ''}`}
-                onClick={showHint}
-                role="button"
-                aria-label="Show hint"
-                title="Show hint"
-              >
-                <LightbulbIcon />
+            <div className="game-controls">
+              <div className="hints">
+                <div
+                  className={`hint-icon ${gameState.hintsRemaining === 0 || !gameState.isGameActive ? 'disabled' : ''}`}
+                  onClick={showHint}
+                  role="button"
+                  aria-label="Show hint"
+                  title="Show hint"
+                >
+                  <LightbulbIcon />
+                </div>
+                <span className="hints-count">{gameState.hintsRemaining}</span>
               </div>
-              <span className="hints-count">{gameState.hintsRemaining}</span>
+              <div className="shuffles">
+                <div
+                  className={`shuffle-icon ${gameState.shufflesRemaining === 0 || !gameState.isGameActive ? 'disabled' : ''}`}
+                  onClick={shuffleBoard}
+                  role="button"
+                  aria-label="Shuffle board"
+                  title="Shuffle board"
+                >
+                  <ShuffleIcon />
+                </div>
+                <span className="shuffles-count">{gameState.shufflesRemaining}</span>
+              </div>
             </div>
           </div>
           <div className="game-board">
