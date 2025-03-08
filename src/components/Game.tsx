@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { GameState, Position, Jewel } from '../types/game';
+import { GameState, Position, Jewel, JewelType } from '../types/game';
 import {
   createBoard,
   findMatches,
   isAdjacent,
   swapJewels,
   removeMatches,
-  findPossibleMoves
+  findPossibleMoves,
+  setLastMovedJewel,
+  BOARD_SIZE,
+  shuffleExistingBoard
 } from '../utils/gameUtils';
-import { playMoveSound, playErrorSound, playGameOverSound, playMatchSound } from '../utils/soundUtils';
+import { playMoveSound, playErrorSound, playGameOverSound, playMatchSound, playHypercubeSound } from '../utils/soundUtils';
 import './Game.css';
 import React from 'react';
 import Menu from './Menu';
@@ -37,6 +40,12 @@ interface SwapAnimation {
   positions: [Position, Position];
   isSwapping: boolean;
   isFailing: boolean;
+}
+
+interface HypercubeClear {
+  positions: Position[];
+  color: JewelType;
+  hypercubePos: Position;
 }
 
 const StarIcon = () => (
@@ -96,6 +105,7 @@ const Game: React.FC = () => {
     isFailing: false
   });
   const [instanceUrl, setInstanceUrl] = useState('');
+  const [hypercubeClear, setHypercubeClear] = useState<HypercubeClear | null>(null);
 
   // Create a ref to store persistent jewel styles
   const jewelStylesRef = React.useRef(new Map<string, { rotation: number, size: number }>());
@@ -253,7 +263,7 @@ const Game: React.FC = () => {
   }, [gameState.board, gameState.isGameActive, gameState.gameOver]);
 
   const handleSwap = (pos1: Position, pos2: Position) => {
-    if (swapAnimation.isSwapping) return; // Prevent multiple swaps during animation
+    if (swapAnimation.isSwapping) return;
 
     setSwapAnimation({
       positions: [pos1, pos2],
@@ -261,15 +271,53 @@ const Game: React.FC = () => {
       isFailing: false
     });
 
+    // Set the last moved jewel position
+    setLastMovedJewel(pos2);
+
     const newBoard = swapJewels(gameState.board, pos1, pos2);
     const hasMatches = findMatches(newBoard).length > 0;
+    const isHypercubeSwap = gameState.board[pos1.row][pos1.col].isHypercube || 
+                            gameState.board[pos2.row][pos2.col].isHypercube;
 
-    if (hasMatches) {
-      playMoveSound();
-      setIsUserMatch(true);
+    if (hasMatches || isHypercubeSwap) {
+      if (isHypercubeSwap) {
+        playHypercubeSound();
+      } else {
+        playMoveSound();
+      }
       
-      requestAnimationFrame(() => {
+      if (isHypercubeSwap) {
+        // Get hypercube clear positions and color
+        const hypercubePos = gameState.board[pos1.row][pos1.col].isHypercube ? pos1 : pos2;
+        const normalPos = gameState.board[pos1.row][pos1.col].isHypercube ? pos2 : pos1;
+        const targetColor = gameState.board[normalPos.row][normalPos.col].type;
+        
+        // Collect positions to clear
+        const clearPositions: Position[] = [];
+        
+        // Add all matching color jewels
+        for (let row = 0; row < BOARD_SIZE; row++) {
+          for (let col = 0; col < BOARD_SIZE; col++) {
+            if (gameState.board[row][col].type === targetColor && !gameState.board[row][col].isHypercube) {
+              clearPositions.push({ row, col });
+            }
+          }
+        }
+        
+        // Always add both the normal jewel and hypercube positions
+        clearPositions.push(normalPos);
+        clearPositions.push(hypercubePos);
+        
+        // Set hypercube clear animation state
+        setHypercubeClear({
+          positions: clearPositions,
+          color: targetColor,
+          hypercubePos: hypercubePos
+        });
+        
+        // Clear the hypercube animation after delay and update board
         setTimeout(() => {
+          setHypercubeClear(null);
           setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
           setGameState(prev => ({
             ...prev,
@@ -277,9 +325,23 @@ const Game: React.FC = () => {
             selectedJewel: null
           }));
         }, ANIMATION_DURATION);
-      });
+      } else {
+        // Handle normal match case
+        setIsUserMatch(true);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
+            setGameState(prev => ({
+              ...prev,
+              board: newBoard,
+              selectedJewel: null
+            }));
+          }, ANIMATION_DURATION);
+        });
+      }
     } else {
       playErrorSound();
+      setLastMovedJewel(null);
       
       requestAnimationFrame(() => {
         setTimeout(() => {
@@ -355,31 +417,8 @@ const Game: React.FC = () => {
 
   const shuffleBoard = () => {
     if ((gameState.shufflesRemaining > 0 || gameState.isZenMode) && gameState.isGameActive) {
-      // Create a new board with the same jewels but in random positions
-      const allJewels = gameState.board.flat();
-      let newBoard: Jewel[][] = [];
-      let attempts = 0;
-      const MAX_ATTEMPTS = 100;
-
-      do {
-        // Shuffle the jewels
-        const shuffledJewels = [...allJewels].sort(() => Math.random() - 0.5);
-        
-        // Create new board
-        newBoard = [];
-        for (let row = 0; row < gameState.board.length; row++) {
-          newBoard[row] = [];
-          for (let col = 0; col < gameState.board[row].length; col++) {
-            newBoard[row][col] = shuffledJewels[row * gameState.board[row].length + col];
-          }
-        }
-
-        attempts++;
-      } while (findMatches(newBoard).length > 0 && attempts < MAX_ATTEMPTS);
-
-      if (attempts >= MAX_ATTEMPTS) {
-        newBoard = createBoard();
-      }
+      // Use the new shuffleExistingBoard function
+      const newBoard = shuffleExistingBoard(gameState.board);
 
       if (!gameState.isZenMode) {
         setGameState(prev => ({
@@ -648,6 +687,14 @@ const Game: React.FC = () => {
           No more moves! Reshuffling the board...
         </div>
       )}
+      {hypercubeClear && (
+        <div 
+          className="hypercube-flash"
+          style={{
+            '--target-color': hypercubeClear.color
+          } as React.CSSProperties}
+        />
+      )}
       {gameState.isInMenu ? (
         <Menu onStartGame={startGame} />
       ) : gameState.gameOver ? (
@@ -762,7 +809,13 @@ const Game: React.FC = () => {
                   const isSwapping = swapAnimation.positions.some(pos => pos.row === rowIndex && pos.col === colIndex);
                   const isSwapFailing = swapAnimation.isFailing && isSwapping;
 
-                  const baseClasses = `jewel ${jewel.type}`;
+                  const isHypercubeTarget = hypercubeClear?.positions.some(
+                    pos => pos.row === rowIndex && pos.col === colIndex
+                  );
+
+                  const baseClasses = `jewel ${jewel.type}${jewel.isHypercube ? ' hypercube' : ''}${
+                    isHypercubeTarget ? ' hypercube-target' : ''
+                  }`;
                   const animationClasses = !willFall && !isMatched ? `${rotationClass} ${sizeClass}` : '';
                   const stateClasses = `${
                     isSelected

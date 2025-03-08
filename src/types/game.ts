@@ -1,4 +1,4 @@
-export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink';
+export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink' | 'hypercube';
 
 export interface Position {
   row: number;
@@ -8,6 +8,8 @@ export interface Position {
 export interface Jewel {
   type: JewelType;
   id: string;
+  isHypercube?: boolean;
+  storedColor?: JewelType; // For hypercube to store the color it will clear
 }
 
 export interface GameState {
