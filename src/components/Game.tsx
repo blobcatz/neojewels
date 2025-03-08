@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { GameState, Position, Jewel, JewelType } from '../types/game';
+import { GameState, Position, JewelType, BoardJewel } from '../types/game';
 import {
   createBoard,
   findMatches,
@@ -124,6 +124,7 @@ const Game: React.FC = () => {
   // Get style for a jewel at a specific position
   const getJewelStyle = (rowIndex: number, colIndex: number) => {
     const jewel = gameState.board[rowIndex][colIndex];
+    if (!jewel) return { rotation: 1, size: 1 };
     return getOrCreateJewelStyle(jewel.id);
   };
 
@@ -132,7 +133,9 @@ const Game: React.FC = () => {
     const usedIds = new Set<string>();
     gameState.board.forEach(row => {
       row.forEach(jewel => {
-        usedIds.add(jewel.id);
+        if (jewel) {
+          usedIds.add(jewel.id);
+        }
       });
     });
 
@@ -176,7 +179,7 @@ const Game: React.FC = () => {
     };
   }, [gameState.isGameActive, gameState.timeRemaining, gameState.isZenMode]);
 
-  const checkAndRemoveMatches = (board: Jewel[][]) => {
+  const checkAndRemoveMatches = (board: BoardJewel[][]) => {
     const matches = findMatches(board);
     if (matches.length > 0) {
       // Play match sound
@@ -203,13 +206,15 @@ const Game: React.FC = () => {
           match.forEach(({ row, col }) => {
             let fallDistance = 0;
             for (let i = row - 1; i >= 0; i--) {
-              fallDistance += 54; // 50px height + 4px margin
-              fallingPositions.push({
-                row: i,
-                col,
-                fallDelay: (row - i) * FALL_DELAY,
-                fallDistance
-              });
+              if (board[i][col]) {
+                fallDistance += 54; // 50px height + 4px margin
+                fallingPositions.push({
+                  row: i,
+                  col,
+                  fallDelay: (row - i) * FALL_DELAY,
+                  fallDistance
+                });
+              }
             }
           });
         });
@@ -265,6 +270,10 @@ const Game: React.FC = () => {
   const handleSwap = (pos1: Position, pos2: Position) => {
     if (swapAnimation.isSwapping) return;
 
+    const jewel1 = gameState.board[pos1.row][pos1.col];
+    const jewel2 = gameState.board[pos2.row][pos2.col];
+    if (!jewel1 || !jewel2) return;
+
     setSwapAnimation({
       positions: [pos1, pos2],
       isSwapping: true,
@@ -273,8 +282,7 @@ const Game: React.FC = () => {
 
     const newBoard = swapJewels(gameState.board, pos1, pos2);
     const hasMatches = findMatches(newBoard).length > 0;
-    const isHypercubeSwap = gameState.board[pos1.row][pos1.col].isHypercube || 
-                            gameState.board[pos2.row][pos2.col].isHypercube;
+    const isHypercubeSwap = jewel1.isHypercube || jewel2.isHypercube;
 
     if (hasMatches || isHypercubeSwap) {
       if (isHypercubeSwap) {
@@ -285,9 +293,9 @@ const Game: React.FC = () => {
       
       if (isHypercubeSwap) {
         // Get hypercube clear positions and color
-        const hypercubePos = gameState.board[pos1.row][pos1.col].isHypercube ? pos1 : pos2;
-        const normalPos = gameState.board[pos1.row][pos1.col].isHypercube ? pos2 : pos1;
-        const targetColor = gameState.board[normalPos.row][normalPos.col].type;
+        const hypercubePos = jewel1.isHypercube ? pos1 : pos2;
+        const normalPos = jewel1.isHypercube ? pos2 : pos1;
+        const targetColor = (jewel1.isHypercube ? jewel2 : jewel1).type;
         
         // Collect positions to clear
         const clearPositions: Position[] = [];
@@ -295,7 +303,8 @@ const Game: React.FC = () => {
         // Add all matching color jewels
         for (let row = 0; row < BOARD_SIZE; row++) {
           for (let col = 0; col < BOARD_SIZE; col++) {
-            if (gameState.board[row][col].type === targetColor && !gameState.board[row][col].isHypercube) {
+            const jewel = gameState.board[row][col];
+            if (jewel && jewel.type === targetColor && !jewel.isHypercube) {
               clearPositions.push({ row, col });
             }
           }
@@ -769,6 +778,8 @@ const Game: React.FC = () => {
             {gameState.board.map((row, rowIndex) => (
               <div key={rowIndex} className="board-row">
                 {row.map((jewel, colIndex) => {
+                  if (!jewel) return null;
+                  
                   const position = { row: rowIndex, col: colIndex };
                   const style = getJewelStyle(rowIndex, colIndex);
                   const rotationClass = `rotate-${style.rotation}`;
