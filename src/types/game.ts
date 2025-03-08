@@ -20,4 +20,5 @@ export interface GameState {
   timeRemaining: number;
   isGameActive: boolean;
   isInMenu: boolean;
+  isZenMode: boolean;
 } 

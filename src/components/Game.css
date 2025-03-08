@@ -524,4 +524,28 @@ body {
   20% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.end-game-button {
+  margin-top: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  background: linear-gradient(135deg, #ff4d4d, #cc0000);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  font-family: inherit;
+  font-weight: 600;
+  min-height: 44px;
+}
+
+.end-game-button:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
+}
+
+.end-game-button:active {
+  transform: scale(0.95);
 } 

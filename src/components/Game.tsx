@@ -13,10 +13,10 @@ import './Game.css';
 import React from 'react';
 import Menu from './Menu';
 
-const INITIAL_TIME = 90; // 1 minute and 30 seconds
+const INITIAL_TIME = 90; // Default time
 const TIME_BONUS = 2; // seconds added per successful match
-const ANIMATION_DURATION = 500; // Duration of animations in milliseconds
-const FALL_DELAY = 50; // Delay between each falling jewel
+const ANIMATION_DURATION = 500;
+const FALL_DELAY = 50;
 
 interface FallingJewel extends Position {
   fallDelay: number;
@@ -73,7 +73,8 @@ const Game: React.FC = () => {
     gameOver: false,
     timeRemaining: INITIAL_TIME,
     isGameActive: true,
-    isInMenu: true
+    isInMenu: true,
+    isZenMode: false
   });
 
   const [matchedJewels, setMatchedJewels] = useState<Position[]>([]);
@@ -134,7 +135,7 @@ const Game: React.FC = () => {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     
-    if (gameState.isGameActive && gameState.timeRemaining > 0) {
+    if (gameState.isGameActive && !gameState.isZenMode && gameState.timeRemaining > 0) {
       timer = setInterval(() => {
         setGameState(prev => {
           const newTime = prev.timeRemaining - 1;
@@ -160,7 +161,7 @@ const Game: React.FC = () => {
         clearInterval(timer);
       }
     };
-  }, [gameState.isGameActive, gameState.timeRemaining]);
+  }, [gameState.isGameActive, gameState.timeRemaining, gameState.isZenMode]);
 
   const checkAndRemoveMatches = (board: Jewel[][]) => {
     const matches = findMatches(board);
@@ -321,14 +322,16 @@ const Game: React.FC = () => {
   };
 
   const showHint = () => {
-    if (gameState.hintsRemaining > 0 && gameState.isGameActive) {
+    if ((gameState.hintsRemaining > 0 || gameState.isZenMode) && gameState.isGameActive) {
       const possibleMoves = findPossibleMoves(gameState.board);
       if (possibleMoves.length > 0) {
         const [pos1, pos2] = possibleMoves[0];
-        setGameState(prev => ({
-          ...prev,
-          hintsRemaining: prev.hintsRemaining - 1
-        }));
+        if (!gameState.isZenMode) {
+          setGameState(prev => ({
+            ...prev,
+            hintsRemaining: prev.hintsRemaining - 1
+          }));
+        }
         
         // Highlight the hint
         const hintElements = [
@@ -347,12 +350,12 @@ const Game: React.FC = () => {
   };
 
   const shuffleBoard = () => {
-    if (gameState.shufflesRemaining > 0 && gameState.isGameActive) {
+    if ((gameState.shufflesRemaining > 0 || gameState.isZenMode) && gameState.isGameActive) {
       // Create a new board with the same jewels but in random positions
       const allJewels = gameState.board.flat();
       let newBoard: Jewel[][] = [];
       let attempts = 0;
-      const MAX_ATTEMPTS = 100; // Prevent infinite loop
+      const MAX_ATTEMPTS = 100;
 
       do {
         // Shuffle the jewels
@@ -370,32 +373,39 @@ const Game: React.FC = () => {
         attempts++;
       } while (findMatches(newBoard).length > 0 && attempts < MAX_ATTEMPTS);
 
-      // If we couldn't find a valid arrangement after max attempts,
-      // create a completely new board instead
       if (attempts >= MAX_ATTEMPTS) {
         newBoard = createBoard();
       }
 
-      setGameState(prev => ({
-        ...prev,
-        board: newBoard,
-        shufflesRemaining: prev.shufflesRemaining - 1
-      }));
+      if (!gameState.isZenMode) {
+        setGameState(prev => ({
+          ...prev,
+          board: newBoard,
+          shufflesRemaining: prev.shufflesRemaining - 1
+        }));
+      } else {
+        setGameState(prev => ({
+          ...prev,
+          board: newBoard
+        }));
+      }
     }
   };
 
-  const startGame = () => {
+  const startGame = (initialTime: number) => {
+    const isZenMode = initialTime === 0;
     setGameState(prev => ({
       ...prev,
       isInMenu: false,
       board: createBoard(),
       score: 0,
-      hintsRemaining: 3,
-      shufflesRemaining: 2,
+      hintsRemaining: isZenMode ? Infinity : 3,
+      shufflesRemaining: isZenMode ? Infinity : 2,
       selectedJewel: null,
       gameOver: false,
-      timeRemaining: INITIAL_TIME,
-      isGameActive: true
+      timeRemaining: initialTime || INITIAL_TIME,
+      isGameActive: true,
+      isZenMode
     }));
   };
 
@@ -414,7 +424,17 @@ const Game: React.FC = () => {
     }));
   };
 
+  const endGame = () => {
+    playGameOverSound();
+    setGameState(prev => ({
+      ...prev,
+      gameOver: true,
+      isGameActive: false
+    }));
+  };
+
   const formatTime = (seconds: number): string => {
+    if (gameState.isZenMode) return '∞';
     return `${seconds}s`;
   };
 
@@ -666,7 +686,7 @@ const Game: React.FC = () => {
             <div className="game-controls">
               <div className="hints">
                 <div
-                  className={`hint-icon ${gameState.hintsRemaining === 0 || !gameState.isGameActive ? 'disabled' : ''}`}
+                  className={`hint-icon ${(!gameState.isZenMode && gameState.hintsRemaining === 0) || !gameState.isGameActive ? 'disabled' : ''}`}
                   onClick={showHint}
                   role="button"
                   aria-label="Show hint"
@@ -674,11 +694,11 @@ const Game: React.FC = () => {
                 >
                   <LightbulbIcon />
                 </div>
-                <span className="hints-count">{gameState.hintsRemaining}</span>
+                <span className="hints-count">{gameState.isZenMode ? '∞' : gameState.hintsRemaining}</span>
               </div>
               <div className="shuffles">
                 <div
-                  className={`shuffle-icon ${gameState.shufflesRemaining === 0 || !gameState.isGameActive ? 'disabled' : ''}`}
+                  className={`shuffle-icon ${(!gameState.isZenMode && gameState.shufflesRemaining === 0) || !gameState.isGameActive ? 'disabled' : ''}`}
                   onClick={shuffleBoard}
                   role="button"
                   aria-label="Shuffle board"
@@ -686,7 +706,7 @@ const Game: React.FC = () => {
                 >
                   <ShuffleIcon />
                 </div>
-                <span className="shuffles-count">{gameState.shufflesRemaining}</span>
+                <span className="shuffles-count">{gameState.isZenMode ? '∞' : gameState.shufflesRemaining}</span>
               </div>
             </div>
           </div>
@@ -774,6 +794,11 @@ const Game: React.FC = () => {
               </div>
             ))}
           </div>
+          {gameState.isZenMode && (
+            <button className="end-game-button" onClick={endGame}>
+              End Game
+            </button>
+          )}
         </>
       )}
     </div>
