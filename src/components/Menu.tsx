@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './Menu.css';
 
 interface MenuProps {
-  onStartGame: (initialTime: number, isNeocatMode: boolean) => void;
+  onStartGame: (initialTime: number, isNeocatMode: boolean, specialJewelsEnabled: boolean) => void;
 }
 
 const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
@@ -10,10 +10,11 @@ const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [isNeocatMode, setIsNeocatMode] = useState(false);
+  const [specialJewelsEnabled, setSpecialJewelsEnabled] = useState(true);
 
   const handleStartGame = () => {
     const parsedTime = timeInput === '' ? 90 : parseInt(timeInput);
-    onStartGame(parsedTime, isNeocatMode);
+    onStartGame(parsedTime, isNeocatMode, specialJewelsEnabled);
   };
 
   return (
@@ -69,6 +70,20 @@ const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
                   </div>
                 </label>
                 <p className="setting-hint">Replaces all neocritters with neocats :3</p>
+              </div>
+              <div className="special-jewels-setting">
+                <label className="toggle-label">
+                  <span>Special Neomojis</span>
+                  <div className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={specialJewelsEnabled}
+                      onChange={(e) => setSpecialJewelsEnabled(e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </div>
+                </label>
+                <p className="setting-hint">Enable special neomojis (currently hyperfoxes)</p>
               </div>
             </div>
             <button className="close-button" onClick={() => setShowSettings(false)}>

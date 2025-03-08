@@ -86,7 +86,8 @@ const Game: React.FC = () => {
     isGameActive: true,
     isInMenu: true,
     isZenMode: false,
-    isNeocatMode: false
+    isNeocatMode: false,
+    specialJewelsEnabled: true
   });
 
   const [matchedJewels, setMatchedJewels] = useState<Position[]>([]);
@@ -255,7 +256,7 @@ const Game: React.FC = () => {
         setTimeout(() => {
           setGameState(prev => ({
             ...prev,
-            board: createBoard()
+            board: createBoard(prev.specialJewelsEnabled)
           }));
         }, BOARD_RESET_DELAY / 2);
       }
@@ -418,7 +419,7 @@ const Game: React.FC = () => {
   const shuffleBoard = () => {
     if ((gameState.shufflesRemaining > 0 || gameState.isZenMode) && gameState.isGameActive) {
       // Use the new shuffleExistingBoard function
-      const newBoard = shuffleExistingBoard(gameState.board);
+      const newBoard = shuffleExistingBoard(gameState.board, gameState.specialJewelsEnabled);
 
       if (!gameState.isZenMode) {
         setGameState(prev => ({
@@ -435,12 +436,12 @@ const Game: React.FC = () => {
     }
   };
 
-  const startGame = (initialTime: number, isNeocatMode: boolean) => {
+  const startGame = (initialTime: number, isNeocatMode: boolean, specialJewelsEnabled: boolean) => {
     const isZenMode = initialTime === 0;
     setGameState(prev => ({
       ...prev,
       isInMenu: false,
-      board: createBoard(),
+      board: createBoard(specialJewelsEnabled),
       score: 0,
       hintsRemaining: isZenMode ? Infinity : 3,
       shufflesRemaining: isZenMode ? Infinity : 2,
@@ -449,14 +450,15 @@ const Game: React.FC = () => {
       timeRemaining: initialTime || INITIAL_TIME,
       isGameActive: true,
       isZenMode,
-      isNeocatMode
+      isNeocatMode,
+      specialJewelsEnabled
     }));
   };
 
   const resetGame = () => {
     setGameState(prev => ({
       ...prev,
-      board: createBoard(),
+      board: createBoard(prev.specialJewelsEnabled),
       score: 0,
       hintsRemaining: 3,
       shufflesRemaining: 2,
@@ -465,7 +467,8 @@ const Game: React.FC = () => {
       timeRemaining: INITIAL_TIME,
       isGameActive: true,
       isInMenu: true,
-      isNeocatMode: prev.isNeocatMode
+      isNeocatMode: prev.isNeocatMode,
+      specialJewelsEnabled: prev.specialJewelsEnabled
     }));
   };
 

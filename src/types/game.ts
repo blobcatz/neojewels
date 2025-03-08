@@ -8,7 +8,8 @@ export interface Position {
 export interface Jewel {
   type: JewelType;
   id: string;
-  isHypercube?: boolean;
+  isHypercube: boolean;
+  specialJewelsEnabled: boolean;
   storedColor?: JewelType; // For hypercube to store the color it will clear
 }
 
@@ -24,4 +25,5 @@ export interface GameState {
   isInMenu: boolean;
   isZenMode: boolean;
   isNeocatMode: boolean;
+  specialJewelsEnabled: boolean;
 } 
