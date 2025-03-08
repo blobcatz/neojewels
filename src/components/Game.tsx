@@ -319,7 +319,11 @@ const Game: React.FC = () => {
           setGameState(prev => ({
             ...prev,
             board: newBoard,
-            selectedJewel: null
+            selectedJewel: null,
+            // Add points for hypercube clear: 20 points per jewel cleared
+            score: prev.score + clearPositions.length * 20,
+            // Add time bonus for hypercube clear
+            timeRemaining: !prev.isZenMode ? Math.min(prev.timeRemaining + TIME_BONUS, INITIAL_TIME) : prev.timeRemaining
           }));
         }, ANIMATION_DURATION);
       } else {
