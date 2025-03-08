@@ -1,20 +1,21 @@
-export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink' | 'hypercube';
-
-export interface Position {
-  row: number;
-  col: number;
-}
+export type JewelType = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink';
 
 export interface Jewel {
   type: JewelType;
   id: string;
   isHypercube: boolean;
   specialJewelsEnabled: boolean;
-  storedColor?: JewelType; // For hypercube to store the color it will clear
+}
+
+export type BoardJewel = Jewel | null;
+
+export interface Position {
+  row: number;
+  col: number;
 }
 
 export interface GameState {
-  board: Jewel[][];
+  board: BoardJewel[][];
   score: number;
   hintsRemaining: number;
   shufflesRemaining: number;

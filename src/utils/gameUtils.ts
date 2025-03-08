@@ -1,20 +1,12 @@
-import { Jewel, JewelType, Position } from '../types/game';
+import { Jewel, JewelType, Position, BoardJewel } from '../types/game';
 
 export const BOARD_SIZE = 8;
 const MATCH_MIN = 3;
-const HYPERCUBE_MATCH = 5;
+const HYPERCUBE_MATCH = 4;
 
 export const JEWEL_TYPES: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
 
 let nextJewelId = 1;
-
-export const getRandomJewelType = (): JewelType => {
-  return JEWEL_TYPES[Math.floor(Math.random() * JEWEL_TYPES.length)];
-};
-
-export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 15);
-};
 
 export const generateRandomJewel = (excludeTypes: JewelType[] = [], specialJewelsEnabled: boolean = true): Jewel => {
   const availableTypes = JEWEL_TYPES.filter(type => !excludeTypes.includes(type));
@@ -37,27 +29,27 @@ export const createHypercube = (specialJewelsEnabled: boolean = true): Jewel => 
   };
 };
 
-const getExcludedTypes = (board: Jewel[][], row: number, col: number): JewelType[] => {
+const getExcludedTypes = (board: BoardJewel[][], row: number, col: number): JewelType[] => {
   const excludedTypes: JewelType[] = [];
   
   // Check horizontal matches (need to check 2 previous jewels)
   if (col >= 2) {
-    if (board[row][col - 1].type === board[row][col - 2].type) {
-      excludedTypes.push(board[row][col - 1].type);
+    if (board[row][col - 1]!.type === board[row][col - 2]!.type) {
+      excludedTypes.push(board[row][col - 1]!.type);
     }
   }
   
   // Check vertical matches (need to check 2 previous jewels)
   if (row >= 2) {
-    if (board[row - 1][col].type === board[row - 2][col].type) {
-      excludedTypes.push(board[row - 1][col].type);
+    if (board[row - 1][col]!.type === board[row - 2][col]!.type) {
+      excludedTypes.push(board[row - 1][col]!.type);
     }
   }
   
   return excludedTypes;
 };
 
-export const shuffleExistingBoard = (board: Jewel[][], specialJewelsEnabled: boolean = true): Jewel[][] => {
+export const shuffleExistingBoard = (board: BoardJewel[][], specialJewelsEnabled: boolean = true): BoardJewel[][] => {
   // Collect all jewels from the board
   const allJewels = board.flat();
   
@@ -84,15 +76,19 @@ export const shuffleExistingBoard = (board: Jewel[][], specialJewelsEnabled: boo
     }
     
     // Create new board from shuffled jewels
-    const newBoard: Jewel[][] = [];
+    const newBoard: BoardJewel[][] = [];
     for (let row = 0; row < BOARD_SIZE; row++) {
       newBoard[row] = [];
       for (let col = 0; col < BOARD_SIZE; col++) {
         const jewel = shuffledJewels[row * BOARD_SIZE + col];
-        newBoard[row][col] = {
-          ...jewel,
-          specialJewelsEnabled
-        };
+        if (jewel) {
+          newBoard[row][col] = {
+            ...jewel,
+            specialJewelsEnabled
+          };
+        } else {
+          newBoard[row][col] = generateRandomJewel([], specialJewelsEnabled);
+        }
       }
     }
     
@@ -109,8 +105,17 @@ export const shuffleExistingBoard = (board: Jewel[][], specialJewelsEnabled: boo
   return createBoard(specialJewelsEnabled);
 };
 
-export const createBoard = (specialJewelsEnabled: boolean = true): Jewel[][] => {
-  let board: Jewel[][] = Array(BOARD_SIZE).fill(null).map(() =>
+const getRandomJewelType = (): JewelType => {
+  const types: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
+  return types[Math.floor(Math.random() * types.length)];
+};
+
+const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 15);
+};
+
+export const createBoard = (specialJewelsEnabled: boolean = true): BoardJewel[][] => {
+  let board: BoardJewel[][] = Array(BOARD_SIZE).fill(null).map(() =>
     Array(BOARD_SIZE).fill(null).map(() => ({
       type: getRandomJewelType(),
       id: generateId(),
@@ -134,7 +139,7 @@ export const createBoard = (specialJewelsEnabled: boolean = true): Jewel[][] => 
   return board;
 };
 
-export const findMatches = (board: Jewel[][]): Position[][] => {
+export const findMatches = (board: BoardJewel[][]): Position[][] => {
   const matches: Position[][] = [];
   
   // Check horizontal matches
@@ -143,7 +148,9 @@ export const findMatches = (board: Jewel[][]): Position[][] => {
     let start = 0;
     
     for (let col = 1; col < BOARD_SIZE; col++) {
-      if (board[row][col].type === board[row][col - 1].type && !board[row][col].isHypercube) {
+      const current = board[row][col];
+      const previous = board[row][col - 1];
+      if (current && previous && current.type === previous.type && !current.isHypercube) {
         count++;
       } else {
         if (count >= MATCH_MIN) {
@@ -173,7 +180,9 @@ export const findMatches = (board: Jewel[][]): Position[][] => {
     let start = 0;
     
     for (let row = 1; row < BOARD_SIZE; row++) {
-      if (board[row][col].type === board[row - 1][col].type && !board[row][col].isHypercube) {
+      const current = board[row][col];
+      const previous = board[row - 1][col];
+      if (current && previous && current.type === previous.type && !current.isHypercube) {
         count++;
       } else {
         if (count >= MATCH_MIN) {
@@ -200,7 +209,7 @@ export const findMatches = (board: Jewel[][]): Position[][] => {
   return matches;
 };
 
-export const findPossibleMoves = (board: Jewel[][]): [Position, Position][] => {
+export const findPossibleMoves = (board: BoardJewel[][]): [Position, Position][] => {
   const moves: [Position, Position][] = [];
 
   // Helper function to check if a move creates a match or involves a hypercube
@@ -211,8 +220,8 @@ export const findPossibleMoves = (board: Jewel[][]): [Position, Position][] => {
     
     // Check if either jewel is a hypercube
     const isValidHypercubeMove = 
-      (board[pos1.row][pos1.col].isHypercube && !board[pos2.row][pos2.col].isHypercube) ||
-      (board[pos2.row][pos2.col].isHypercube && !board[pos1.row][pos1.col].isHypercube);
+      (board[pos1.row][pos1.col]!.isHypercube && !board[pos2.row][pos2.col]!.isHypercube) ||
+      (board[pos2.row][pos2.col]!.isHypercube && !board[pos1.row][pos1.col]!.isHypercube);
     
     return findMatches(tempBoard).length > 0 || isValidHypercubeMove;
   };
@@ -244,15 +253,18 @@ export const isAdjacent = (pos1: Position, pos2: Position): boolean => {
   return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
 };
 
-export const swapJewels = (board: Jewel[][], pos1: Position, pos2: Position): Jewel[][] => {
+export const swapJewels = (board: BoardJewel[][], pos1: Position, pos2: Position): BoardJewel[][] => {
   const newBoard = board.map(row => [...row]);
-  const specialJewelsEnabled = board[0][0].specialJewelsEnabled;
+  const specialJewelsEnabled = board[0][0]!.specialJewelsEnabled;
   
   // Handle hypercube swap
-  if (newBoard[pos1.row][pos1.col].isHypercube || newBoard[pos2.row][pos2.col].isHypercube) {
-    const hypercubePos = newBoard[pos1.row][pos1.col].isHypercube ? pos1 : pos2;
-    const normalPos = newBoard[pos1.row][pos1.col].isHypercube ? pos2 : pos1;
-    const targetColor = newBoard[normalPos.row][normalPos.col].type;
+  const jewel1 = newBoard[pos1.row][pos1.col];
+  const jewel2 = newBoard[pos2.row][pos2.col];
+  
+  if (jewel1?.isHypercube || jewel2?.isHypercube) {
+    const hypercubePos = jewel1?.isHypercube ? pos1 : pos2;
+    const normalPos = jewel1?.isHypercube ? pos2 : pos1;
+    const targetColor = board[normalPos.row][normalPos.col]!.type;
     
     // First perform the swap
     [newBoard[pos1.row][pos1.col], newBoard[pos2.row][pos2.col]] = 
@@ -264,7 +276,8 @@ export const swapJewels = (board: Jewel[][], pos1: Position, pos2: Position): Je
     // Find all jewels of the target color
     for (let row = 0; row < BOARD_SIZE; row++) {
       for (let col = 0; col < BOARD_SIZE; col++) {
-        if (newBoard[row][col].type === targetColor && !newBoard[row][col].isHypercube) {
+        const jewel = newBoard[row][col];
+        if (jewel && jewel.type === targetColor && !jewel.isHypercube) {
           positionsToReplace.add(`${row},${col}`);
         }
       }
@@ -290,12 +303,11 @@ export const swapJewels = (board: Jewel[][], pos1: Position, pos2: Position): Je
   return newBoard;
 };
 
-export const removeMatches = (board: Jewel[][], matches: Position[][]): Jewel[][] => {
+export const removeMatches = (board: BoardJewel[][], matches: Position[][]): BoardJewel[][] => {
   const newBoard = board.map(row => [...row]);
-  const flatMatches = matches.flat();
-  const specialJewelsEnabled = board[0][0].specialJewelsEnabled;
+  const specialJewelsEnabled = board[0][0]!.specialJewelsEnabled;
 
-  // Create hypercube for matches of 4 or more ONLY if special jewels are enabled
+  // Create hypercube for matches of 5 or more ONLY if special jewels are enabled
   const longMatch = matches.find(match => match.length >= HYPERCUBE_MATCH);
   const shouldCreateHypercube = specialJewelsEnabled && longMatch;
 
@@ -310,36 +322,34 @@ export const removeMatches = (board: Jewel[][], matches: Position[][]): Jewel[][
     newBoard[middlePos.row][middlePos.col] = newJewel;
   }
 
-  // Replace matched jewels with new ones
-  for (const { row, col } of flatMatches) {
+  // Replace matched jewels with null
+  for (const { row, col } of matches.flat()) {
     // Only skip replacement if we're creating a hypercube at this position
     if (!(shouldCreateHypercube && 
           longMatch?.some(pos => pos.row === row && pos.col === col))) {
-      newBoard[row][col] = {
-        type: getRandomJewelType(),
-        id: generateId(),
-        isHypercube: false,
-        specialJewelsEnabled
-      };
+      newBoard[row][col] = null;
     }
   }
 
   // Let jewels fall to fill empty spaces
   for (let col = 0; col < BOARD_SIZE; col++) {
+    // Start from the bottom, find empty spaces and move jewels down
     let emptyRow = BOARD_SIZE - 1;
+    
+    // First pass: Move existing jewels down
     for (let row = BOARD_SIZE - 1; row >= 0; row--) {
-      if (newBoard[row][col].type !== null) {
-        if (emptyRow !== row) {
-          newBoard[emptyRow][col] = newBoard[row][col];
-          newBoard[row][col] = {
-            type: getRandomJewelType(),
-            id: generateId(),
-            isHypercube: false,
-            specialJewelsEnabled
-          };
+      if (newBoard[row][col] !== null) { // If we found a jewel
+        if (emptyRow !== row) { // If it needs to fall
+          newBoard[emptyRow][col] = newBoard[row][col]; // Move it down
+          newBoard[row][col] = null; // Clear its original position
         }
-        emptyRow--;
+        emptyRow--; // Move to next empty position
       }
+    }
+    
+    // Second pass: Fill remaining empty spaces with new jewels
+    for (let row = emptyRow; row >= 0; row--) {
+      newBoard[row][col] = generateRandomJewel([], specialJewelsEnabled);
     }
   }
 

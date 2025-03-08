@@ -8,9 +8,7 @@ import {
   removeMatches,
   findPossibleMoves,
   BOARD_SIZE,
-  shuffleExistingBoard,
-  getRandomJewelType,
-  generateId
+  shuffleExistingBoard
 } from '../utils/gameUtils';
 import { playMoveSound, playErrorSound, playGameOverSound, playMatchSound, playHypercubeSound } from '../utils/soundUtils';
 import './Game.css';
@@ -286,19 +284,18 @@ const Game: React.FC = () => {
       }
       
       if (isHypercubeSwap) {
-        // Get hypercube clear positions and color from the original board state
-        const originalBoard = gameState.board;
-        const hypercubePos = originalBoard[pos1.row][pos1.col].isHypercube ? pos1 : pos2;
-        const normalPos = originalBoard[pos1.row][pos1.col].isHypercube ? pos2 : pos1;
-        const targetColor = originalBoard[normalPos.row][normalPos.col].type;
+        // Get hypercube clear positions and color
+        const hypercubePos = gameState.board[pos1.row][pos1.col].isHypercube ? pos1 : pos2;
+        const normalPos = gameState.board[pos1.row][pos1.col].isHypercube ? pos2 : pos1;
+        const targetColor = gameState.board[normalPos.row][normalPos.col].type;
         
         // Collect positions to clear
         const clearPositions: Position[] = [];
         
-        // Add all matching color jewels using original board state
+        // Add all matching color jewels
         for (let row = 0; row < BOARD_SIZE; row++) {
           for (let col = 0; col < BOARD_SIZE; col++) {
-            if (originalBoard[row][col].type === targetColor && !originalBoard[row][col].isHypercube) {
+            if (gameState.board[row][col].type === targetColor && !gameState.board[row][col].isHypercube) {
               clearPositions.push({ row, col });
             }
           }
@@ -307,17 +304,6 @@ const Game: React.FC = () => {
         // Always add both the normal jewel and hypercube positions
         clearPositions.push(normalPos);
         clearPositions.push(hypercubePos);
-        
-        // Create a new board with all matching jewels cleared
-        const clearedBoard = originalBoard.map(row => [...row]);
-        clearPositions.forEach(({ row, col }) => {
-          clearedBoard[row][col] = {
-            type: getRandomJewelType(),
-            id: generateId(),
-            isHypercube: false,
-            specialJewelsEnabled: originalBoard[0][0].specialJewelsEnabled
-          };
-        });
         
         // Set hypercube clear animation state
         setHypercubeClear({
@@ -332,9 +318,11 @@ const Game: React.FC = () => {
           setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
           setGameState(prev => ({
             ...prev,
-            board: clearedBoard,
+            board: newBoard,
             selectedJewel: null,
+            // Add points for hypercube clear: 20 points per jewel cleared
             score: prev.score + clearPositions.length * 20,
+            // Add time bonus for hypercube clear
             timeRemaining: !prev.isZenMode ? Math.min(prev.timeRemaining + TIME_BONUS, INITIAL_TIME) : prev.timeRemaining
           }));
         }, ANIMATION_DURATION);
