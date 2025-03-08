@@ -7,7 +7,6 @@ const HYPERCUBE_MATCH = 4;
 export const JEWEL_TYPES: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
 
 let nextJewelId = 1;
-let lastMovedJewel: Position | null = null;
 
 export const generateRandomJewel = (excludeTypes: JewelType[] = [], specialJewelsEnabled: boolean = true): Jewel => {
   const availableTypes = JEWEL_TYPES.filter(type => !excludeTypes.includes(type));
@@ -298,7 +297,7 @@ export const removeMatches = (board: Jewel[][], matches: Position[][]): Jewel[][
   const specialJewelsEnabled = board[0][0].specialJewelsEnabled;
 
   // Create hypercube for matches of 4 or more ONLY if special jewels are enabled
-  const longMatch = matches.find(match => match.length >= 4);
+  const longMatch = matches.find(match => match.length >= HYPERCUBE_MATCH);
   const shouldCreateHypercube = specialJewelsEnabled && longMatch;
 
   if (shouldCreateHypercube) {
@@ -346,8 +345,4 @@ export const removeMatches = (board: Jewel[][], matches: Position[][]): Jewel[][
   }
 
   return newBoard;
-};
-
-export const setLastMovedJewel = (position: Position | null) => {
-  lastMovedJewel = position;
 }; 

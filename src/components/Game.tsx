@@ -7,7 +7,6 @@ import {
   swapJewels,
   removeMatches,
   findPossibleMoves,
-  setLastMovedJewel,
   BOARD_SIZE,
   shuffleExistingBoard
 } from '../utils/gameUtils';
@@ -272,9 +271,6 @@ const Game: React.FC = () => {
       isFailing: false
     });
 
-    // Set the last moved jewel position
-    setLastMovedJewel(pos2);
-
     const newBoard = swapJewels(gameState.board, pos1, pos2);
     const hasMatches = findMatches(newBoard).length > 0;
     const isHypercubeSwap = gameState.board[pos1.row][pos1.col].isHypercube || 
@@ -342,7 +338,6 @@ const Game: React.FC = () => {
       }
     } else {
       playErrorSound();
-      setLastMovedJewel(null);
       
       requestAnimationFrame(() => {
         setTimeout(() => {
