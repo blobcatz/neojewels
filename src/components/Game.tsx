@@ -13,8 +13,8 @@ import './Game.css';
 import React from 'react';
 import Menu from './Menu';
 
-const INITIAL_TIME = 60; // 2 minutes in seconds
-const TIME_BONUS = 1; // seconds added per successful match
+const INITIAL_TIME = 90; // 1 minute and 30 seconds
+const TIME_BONUS = 2; // seconds added per successful match
 const ANIMATION_DURATION = 500; // Duration of animations in milliseconds
 const FALL_DELAY = 50; // Delay between each falling jewel
 
@@ -67,7 +67,7 @@ const Game: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
     board: createBoard(),
     score: 0,
-    hintsRemaining: 2,
+    hintsRemaining: 3,
     shufflesRemaining: 2,
     selectedJewel: null,
     gameOver: false,
@@ -390,7 +390,7 @@ const Game: React.FC = () => {
       isInMenu: false,
       board: createBoard(),
       score: 0,
-      hintsRemaining: 2,
+      hintsRemaining: 3,
       shufflesRemaining: 2,
       selectedJewel: null,
       gameOver: false,
@@ -404,7 +404,7 @@ const Game: React.FC = () => {
       ...prev,
       board: createBoard(),
       score: 0,
-      hintsRemaining: 2,
+      hintsRemaining: 3,
       shufflesRemaining: 2,
       selectedJewel: null,
       gameOver: false,
