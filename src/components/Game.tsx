@@ -80,6 +80,7 @@ const Game: React.FC = () => {
   const [fallingJewels, setFallingJewels] = useState<FallingJewel[]>([]);
   const [isShaking, setIsShaking] = useState(false);
   const [isUserMatch, setIsUserMatch] = useState(false);
+  const [showNoMovesNotification, setShowNoMovesNotification] = useState(false);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     startPosition: null,
@@ -230,15 +231,25 @@ const Game: React.FC = () => {
       }, 300);
     } else {
       const possibleMoves = findPossibleMoves(board);
-      if (possibleMoves.length === 0) {
-        // No possible moves, reshuffle the board
-        setGameState(prev => ({
-          ...prev,
-          board: createBoard()
-        }));
+      if (possibleMoves.length === 0 && gameState.isGameActive && !gameState.gameOver) {
+        // Show notification
+        setShowNoMovesNotification(true);
+        
+        // Hide notification after animation
+        setTimeout(() => {
+          setShowNoMovesNotification(false);
+        }, 2000);
+
+        // Create a new board
+        setTimeout(() => {
+          setGameState(prev => ({
+            ...prev,
+            board: createBoard()
+          }));
+        }, 1000); // Start creating new board while notification is still visible
       }
     }
-  }, [gameState.board]);
+  }, [gameState.board, gameState.isGameActive, gameState.gameOver]);
 
   const handleSwap = (pos1: Position, pos2: Position) => {
     // Start swap animation
@@ -606,6 +617,11 @@ const Game: React.FC = () => {
 
   return (
     <div className="game-container">
+      {showNoMovesNotification && (
+        <div className="notification">
+          No more moves! Reshuffling the board...
+        </div>
+      )}
       {gameState.isInMenu ? (
         <Menu onStartGame={startGame} />
       ) : gameState.gameOver ? (
