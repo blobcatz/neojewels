@@ -2,11 +2,19 @@ import { Jewel, JewelType, Position } from '../types/game';
 
 export const BOARD_SIZE = 8;
 const MATCH_MIN = 3;
-const HYPERCUBE_MATCH = 4;
+const HYPERCUBE_MATCH = 5;
 
 export const JEWEL_TYPES: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
 
 let nextJewelId = 1;
+
+export const getRandomJewelType = (): JewelType => {
+  return JEWEL_TYPES[Math.floor(Math.random() * JEWEL_TYPES.length)];
+};
+
+export const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 15);
+};
 
 export const generateRandomJewel = (excludeTypes: JewelType[] = [], specialJewelsEnabled: boolean = true): Jewel => {
   const availableTypes = JEWEL_TYPES.filter(type => !excludeTypes.includes(type));
@@ -99,15 +107,6 @@ export const shuffleExistingBoard = (board: Jewel[][], specialJewelsEnabled: boo
   // If we couldn't find a valid arrangement after max attempts,
   // create a new board as a fallback
   return createBoard(specialJewelsEnabled);
-};
-
-const getRandomJewelType = (): JewelType => {
-  const types: JewelType[] = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink'];
-  return types[Math.floor(Math.random() * types.length)];
-};
-
-const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 15);
 };
 
 export const createBoard = (specialJewelsEnabled: boolean = true): Jewel[][] => {
