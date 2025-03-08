@@ -422,7 +422,8 @@ const Game: React.FC = () => {
       gameOver: false,
       timeRemaining: INITIAL_TIME,
       isGameActive: true,
-      isInMenu: true
+      isInMenu: true,
+      isNeocatMode: prev.isNeocatMode
     }));
   };
 

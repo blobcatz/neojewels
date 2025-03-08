@@ -21,4 +21,5 @@ export interface GameState {
   isGameActive: boolean;
   isInMenu: boolean;
   isZenMode: boolean;
+  isNeocatMode: boolean;
 } 
