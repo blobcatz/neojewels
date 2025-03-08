@@ -585,7 +585,7 @@ const Game: React.FC = () => {
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     if (!dragState.isDragging || !dragState.startPosition || !dragState.currentPosition) return;
 
     if (isAdjacent(dragState.startPosition, dragState.currentPosition)) {
