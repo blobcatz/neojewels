@@ -74,7 +74,8 @@ const Game: React.FC = () => {
     timeRemaining: INITIAL_TIME,
     isGameActive: true,
     isInMenu: true,
-    isZenMode: false
+    isZenMode: false,
+    isNeocatMode: false
   });
 
   const [matchedJewels, setMatchedJewels] = useState<Position[]>([]);
@@ -392,7 +393,7 @@ const Game: React.FC = () => {
     }
   };
 
-  const startGame = (initialTime: number) => {
+  const startGame = (initialTime: number, isNeocatMode: boolean) => {
     const isZenMode = initialTime === 0;
     setGameState(prev => ({
       ...prev,
@@ -405,7 +406,8 @@ const Game: React.FC = () => {
       gameOver: false,
       timeRemaining: initialTime || INITIAL_TIME,
       isGameActive: true,
-      isZenMode
+      isZenMode,
+      isNeocatMode
     }));
   };
 
@@ -710,7 +712,7 @@ const Game: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="game-board" ref={boardRef}>
+          <div className={`game-board ${gameState.isNeocatMode ? 'neocat-mode' : ''}`} ref={boardRef}>
             {gameState.board.map((row, rowIndex) => (
               <div key={rowIndex} className="board-row">
                 {row.map((jewel, colIndex) => {

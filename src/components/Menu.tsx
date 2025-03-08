@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import './Menu.css';
 
 interface MenuProps {
-  onStartGame: (initialTime: number) => void;
+  onStartGame: (initialTime: number, isNeocatMode: boolean) => void;
 }
 
 const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
   const [timeInput, setTimeInput] = useState<string>('');
   const [showSettings, setShowSettings] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [isNeocatMode, setIsNeocatMode] = useState(false);
 
   const handleStartGame = () => {
     const parsedTime = timeInput === '' ? 90 : parseInt(timeInput);
-    onStartGame(parsedTime);
+    onStartGame(parsedTime, isNeocatMode);
   };
 
   return (
@@ -38,21 +39,37 @@ const Menu: React.FC<MenuProps> = ({ onStartGame }) => {
         <div className="popup-overlay">
           <div className="popup-content settings-popup">
             <h2>Settings</h2>
-            <div className="time-setting">
-              <p>Time: </p>
-              <input
-                type="number"
-                min="0"
-                placeholder="90"
-                value={timeInput}
-                onChange={(e) => setTimeInput(e.target.value)}
-                className="time-input"
-                aria-label="Initial game time in seconds"
-              />
-              <p className="time-hint">
-                Initial time in seconds (default: 90)<br />
-                Set to 0 for Zen Mode with no limits
-              </p>
+            <div className="settings-group">
+              <div className="time-setting">
+                <p>Time: </p>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="90"
+                  value={timeInput}
+                  onChange={(e) => setTimeInput(e.target.value)}
+                  className="time-input"
+                  aria-label="Initial game time in seconds"
+                />
+                <p className="time-hint">
+                  Initial time in seconds (default: 90)<br />
+                  Set to 0 for Zen Mode with no limits
+                </p>
+              </div>
+              <div className="neocat-setting">
+                <label className="toggle-label">
+                  <span>Neocat Mode</span>
+                  <div className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={isNeocatMode}
+                      onChange={(e) => setIsNeocatMode(e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </div>
+                </label>
+                <p className="setting-hint">Replaces all neocritters with neocats :3</p>
+              </div>
             </div>
             <button className="close-button" onClick={() => setShowSettings(false)}>
               Close

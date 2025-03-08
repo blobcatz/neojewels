@@ -165,7 +165,13 @@
 }
 
 /* Settings pop-up specific styles */
-.settings-popup .time-setting {
+.settings-popup .settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.time-setting {
   margin-bottom: 0;
 }
 
@@ -200,10 +206,78 @@
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
 }
 
-.time-hint {
+.time-hint, .setting-hint {
   font-size: 0.9rem;
   color: #666;
   margin: 0.5rem 0 0;
+}
+
+/* Toggle switch styles */
+.neocat-setting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toggle-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+.toggle-label span {
+  margin-left: 0.5rem;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 34px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #00b2ff, #0099ff);
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #00b2ff;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
 }
 
 @keyframes fadeIn {

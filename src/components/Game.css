@@ -9,7 +9,6 @@ body {
   align-items: center;
   padding: 1rem;
   color: white;
-  min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
   touch-action: none; /* Prevent unwanted scrolling on mobile */
@@ -230,6 +229,35 @@ body {
 
 .pink {
   background-image: url('../assets/jewels/seven.png');
+}
+
+/* Neocat mode jewels */
+.neocat-mode .red {
+  background-image: url('../assets/jewels/neocat/one.png');
+}
+
+.neocat-mode .blue {
+  background-image: url('../assets/jewels/neocat/two.png');
+}
+
+.neocat-mode .green {
+  background-image: url('../assets/jewels/neocat/three.png');
+}
+
+.neocat-mode .yellow {
+  background-image: url('../assets/jewels/neocat/four.png');
+}
+
+.neocat-mode .purple {
+  background-image: url('../assets/jewels/neocat/five.png');
+}
+
+.neocat-mode .orange {
+  background-image: url('../assets/jewels/neocat/six.png');
+}
+
+.neocat-mode .pink {
+  background-image: url('../assets/jewels/neocat/seven.png');
 }
 
 .hint-button {
