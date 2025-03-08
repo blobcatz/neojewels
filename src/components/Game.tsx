@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameState, Position, Jewel } from '../types/game';
 import {
   createBoard,
@@ -27,6 +27,8 @@ interface DragState {
   isDragging: boolean;
   startPosition: Position | null;
   currentPosition: Position | null;
+  touchStartX?: number;
+  touchStartY?: number;
 }
 
 interface SwapAnimation {
@@ -61,7 +63,7 @@ const ShuffleIcon = () => (
   </svg>
 );
 
-const Game = () => {
+const Game: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
     board: createBoard(),
     score: 0,
@@ -494,6 +496,114 @@ const Game = () => {
     }
   };
 
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Add viewport meta tag for mobile optimization
+    const viewportMeta = document.createElement('meta');
+    viewportMeta.name = 'viewport';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    document.head.appendChild(viewportMeta);
+
+    // Prevent pull-to-refresh on mobile
+    document.body.style.overscrollBehavior = 'none';
+
+    // Add non-passive touch event listeners to the game board
+    const board = boardRef.current;
+    if (board) {
+      const preventTouch = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+
+      board.addEventListener('touchmove', preventTouch, { passive: false });
+      board.addEventListener('touchstart', preventTouch, { passive: false });
+
+      return () => {
+        document.head.removeChild(viewportMeta);
+        document.body.style.overscrollBehavior = 'auto';
+        board.removeEventListener('touchmove', preventTouch);
+        board.removeEventListener('touchstart', preventTouch);
+      };
+    }
+
+    return () => {
+      document.head.removeChild(viewportMeta);
+      document.body.style.overscrollBehavior = 'auto';
+    };
+  }, []);
+
+  // Modify touch event handlers to not call preventDefault
+  const handleTouchStart = (e: React.TouchEvent, position: Position) => {
+    if (gameState.gameOver || !gameState.isGameActive) return;
+    
+    const touch = e.touches[0];
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    
+    setDragState({
+      isDragging: true,
+      startPosition: position,
+      currentPosition: position,
+      touchStartX: touch.clientX - rect.left,
+      touchStartY: touch.clientY - rect.top
+    });
+    
+    setGameState(prev => ({
+      ...prev,
+      selectedJewel: position
+    }));
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!dragState.isDragging || !boardRef.current) return;
+
+    const touch = e.touches[0];
+    const board = boardRef.current.getBoundingClientRect();
+    const jewelSize = board.width / 8; // 8x8 board
+    
+    const touchX = touch.clientX - board.left;
+    const touchY = touch.clientY - board.top;
+    
+    // Calculate the current position based on touch coordinates
+    const col = Math.floor(touchX / jewelSize);
+    const row = Math.floor(touchY / jewelSize);
+    
+    // Ensure we're within board boundaries
+    if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+      const newPosition = { row, col };
+      
+      // Only update if the position has changed and is adjacent
+      if (dragState.startPosition && 
+          (newPosition.row !== dragState.currentPosition?.row || 
+           newPosition.col !== dragState.currentPosition?.col) &&
+          isAdjacent(dragState.startPosition, newPosition)) {
+        setDragState(prev => ({
+          ...prev,
+          currentPosition: newPosition
+        }));
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!dragState.isDragging || !dragState.startPosition || !dragState.currentPosition) return;
+
+    if (isAdjacent(dragState.startPosition, dragState.currentPosition)) {
+      handleSwap(dragState.startPosition, dragState.currentPosition);
+    }
+
+    setDragState({
+      isDragging: false,
+      startPosition: null,
+      currentPosition: null
+    });
+
+    setGameState(prev => ({
+      ...prev,
+      selectedJewel: null
+    }));
+  };
+
   return (
     <div className="game-container">
       {gameState.isInMenu ? (
@@ -564,10 +674,11 @@ const Game = () => {
               </div>
             </div>
           </div>
-          <div className="game-board">
+          <div className="game-board" ref={boardRef}>
             {gameState.board.map((row, rowIndex) => (
               <div key={rowIndex} className="board-row">
                 {row.map((jewel, colIndex) => {
+                  const position = { row: rowIndex, col: colIndex };
                   const style = getJewelStyle(rowIndex, colIndex);
                   const rotationClass = `rotate-${style.rotation}`;
                   const sizeClass = `size-${style.size}`;
@@ -638,6 +749,9 @@ const Game = () => {
                       onDragOver={(e) => handleDragOver(rowIndex, colIndex, e)}
                       onDrop={() => handleDrop(rowIndex, colIndex)}
                       onDragEnd={handleDragEnd}
+                      onTouchStart={(e) => handleTouchStart(e, position)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                     />
                   );
                 })}
