@@ -15,8 +15,10 @@ import Menu from './Menu';
 
 const INITIAL_TIME = 90; // Default time
 const TIME_BONUS = 2; // seconds added per successful match
-const ANIMATION_DURATION = 500;
-const FALL_DELAY = 50;
+const ANIMATION_DURATION = 300; // Reduced from 500ms for snappier animations
+const FALL_DELAY = 30; // Reduced from 50ms for faster falling
+const MATCH_CHECK_DELAY = 200; // Delay before checking for matches after swap
+const BOARD_RESET_DELAY = 800; // Delay before resetting board on no moves
 
 interface FallingJewel extends Position {
   fallDelay: number;
@@ -230,31 +232,29 @@ const Game: React.FC = () => {
     if (matches.length > 0) {
       setTimeout(() => {
         checkAndRemoveMatches(board);
-      }, 300);
+      }, MATCH_CHECK_DELAY);
     } else {
       const possibleMoves = findPossibleMoves(board);
       if (possibleMoves.length === 0 && gameState.isGameActive && !gameState.gameOver) {
-        // Show notification
         setShowNoMovesNotification(true);
         
-        // Hide notification after animation
         setTimeout(() => {
           setShowNoMovesNotification(false);
-        }, 2000);
+        }, BOARD_RESET_DELAY);
 
-        // Create a new board
         setTimeout(() => {
           setGameState(prev => ({
             ...prev,
             board: createBoard()
           }));
-        }, 1000); // Start creating new board while notification is still visible
+        }, BOARD_RESET_DELAY / 2);
       }
     }
   }, [gameState.board, gameState.isGameActive, gameState.gameOver]);
 
   const handleSwap = (pos1: Position, pos2: Position) => {
-    // Start swap animation
+    if (swapAnimation.isSwapping) return; // Prevent multiple swaps during animation
+
     setSwapAnimation({
       positions: [pos1, pos2],
       isSwapping: true,
@@ -265,37 +265,40 @@ const Game: React.FC = () => {
     const hasMatches = findMatches(newBoard).length > 0;
 
     if (hasMatches) {
-      // Successful swap
       playMoveSound();
-      setIsUserMatch(true); // Mark this as a user-initiated match
-      setTimeout(() => {
-        setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
-        setGameState(prev => ({
-          ...prev,
-          board: newBoard,
-          selectedJewel: null
-        }));
-      }, ANIMATION_DURATION);
-    } else {
-      // Failed swap
-      playErrorSound();
-      setTimeout(() => {
-        setSwapAnimation(prev => ({ ...prev, isFailing: true }));
-        
-        // Wait for fail animation, then swap back
+      setIsUserMatch(true);
+      
+      requestAnimationFrame(() => {
         setTimeout(() => {
+          setSwapAnimation(prev => ({ ...prev, isSwapping: false }));
           setGameState(prev => ({
             ...prev,
-            board: swapJewels(newBoard, pos2, pos1),
+            board: newBoard,
             selectedJewel: null
           }));
-          setSwapAnimation({
-            positions: [{ row: -1, col: -1 }, { row: -1, col: -1 }],
-            isSwapping: false,
-            isFailing: false
-          });
         }, ANIMATION_DURATION);
-      }, ANIMATION_DURATION);
+      });
+    } else {
+      playErrorSound();
+      
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setSwapAnimation(prev => ({ ...prev, isFailing: true }));
+          
+          setTimeout(() => {
+            setGameState(prev => ({
+              ...prev,
+              board: swapJewels(newBoard, pos2, pos1),
+              selectedJewel: null
+            }));
+            setSwapAnimation({
+              positions: [{ row: -1, col: -1 }, { row: -1, col: -1 }],
+              isSwapping: false,
+              isFailing: false
+            });
+          }, ANIMATION_DURATION);
+        }, ANIMATION_DURATION);
+      });
     }
   };
 

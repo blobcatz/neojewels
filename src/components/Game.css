@@ -102,6 +102,9 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .board-row {
@@ -118,7 +121,6 @@ body {
   border-radius: 8px;
   cursor: pointer;
   filter: drop-shadow(0 2px rgba(0, 0, 0, 0.5));
-  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   position: relative;
   transform-style: preserve-3d;
   backface-visibility: hidden;
@@ -129,7 +131,10 @@ body {
   justify-content: center;
   align-items: center;
   touch-action: none;
-  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, filter, opacity;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              filter 0.2s ease-in-out;
 }
 
 /* Random size classes - very subtle variations */
@@ -149,12 +154,12 @@ body {
 
 /* Apply combined transforms */
 .jewel {
-  transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+  transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
 }
 
 .jewel.swapping {
   z-index: 2;
-  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .jewel.swap-failed {
@@ -184,12 +189,12 @@ body {
 }
 
 .jewel.matched {
-  animation: explode 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards !important;
+  animation: explode 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
   z-index: 2;
 }
 
 .jewel.falling {
-  animation: fall 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+  animation: fall 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
   z-index: 1;
 }
 
@@ -378,29 +383,29 @@ body {
 
 @keyframes shake {
   0%, 100% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(0, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(0, 0, 0);
   }
   25% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-3px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(-3px, 0, 0);
   }
   75% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(3px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(3px, 0, 0);
   }
 }
 
 @keyframes explode {
   0% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     opacity: 1;
     filter: brightness(1.5) drop-shadow(0 0 10px currentColor);
   }
   50% {
-    transform: scale(calc(var(--size-scale, 1) * 1.8)) rotate(calc(var(--rotation-angle, 0deg) + 180deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(calc(var(--size-scale, 1) * 1.8)) rotate(calc(var(--rotation-angle, 0deg) + 180deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     opacity: 0.8;
     filter: brightness(2) drop-shadow(0 0 20px currentColor);
   }
   100% {
-    transform: scale(0) rotate(calc(var(--rotation-angle, 0deg) + 360deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(0) rotate(calc(var(--rotation-angle, 0deg) + 360deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     opacity: 0;
     filter: brightness(3) drop-shadow(0 0 30px currentColor);
   }
@@ -408,69 +413,69 @@ body {
 
 @keyframes fall {
   0% {
-    transform: scale(var(--size-scale, 1)) translateY(var(--fall-distance, -50px)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) translate3d(0, var(--fall-distance, -50px), 0) rotate(var(--rotation-angle, 0deg));
     opacity: 0;
   }
   50% {
     opacity: 1;
   }
   100% {
-    transform: scale(var(--size-scale, 1)) translateY(0) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) translate3d(0, 0, 0) rotate(var(--rotation-angle, 0deg));
     opacity: 1;
   }
 }
 
 @keyframes boardShake {
   0%, 100% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(0, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(0, 0, 0);
   }
   20% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-2px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(-2px, 0, 0);
   }
   40% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(2px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(2px, 0, 0);
   }
   60% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(-1px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(-1px, 0, 0);
   }
   80% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(1px, 0);
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(1px, 0, 0);
   }
 }
 
 @keyframes swapFailed {
   0%, 100% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
   }
   25% {
-    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 5deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 5deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
   }
   75% {
-    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 5deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 5deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
   }
 }
 
 @keyframes pulse {
   0% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     filter: brightness(1) drop-shadow(0 0 5px currentColor);
   }
   70% {
-    transform: scale(calc(var(--size-scale, 1) * 1.1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(calc(var(--size-scale, 1) * 1.1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     filter: brightness(1.3) drop-shadow(0 0 15px currentColor);
   }
   100% {
-    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(var(--rotation-angle, 0deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
     filter: brightness(1) drop-shadow(0 0 5px currentColor);
   }
 }
 
 @keyframes adjacentShake {
   0%, 100% {
-    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 1deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) - 1deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
   }
   50% {
-    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 1deg)) translate(var(--offset-x, 0), var(--offset-y, 0));
+    transform: scale(var(--size-scale, 1)) rotate(calc(var(--rotation-angle, 0deg) + 1deg)) translate3d(var(--offset-x, 0), var(--offset-y, 0), 0);
   }
 }
 
@@ -503,11 +508,11 @@ body {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9) rotate(var(--initial-rotation, 0deg));
+    transform: scale(0.9) rotate(var(--initial-rotation, 0deg)) translate3d(0, 0, 0);
   }
   to {
     opacity: 1;
-    transform: scale(1) rotate(var(--initial-rotation, 0deg));
+    transform: scale(1) rotate(var(--initial-rotation, 0deg)) translate3d(0, 0, 0);
   }
 }
 
