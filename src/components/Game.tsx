@@ -16,7 +16,7 @@ import React from 'react';
 import Menu from './Menu';
 
 const INITIAL_TIME = 90; // Default time
-const TIME_BONUS = 2; // seconds added per successful match
+const TIME_BONUS = 1; // seconds added per successful match
 const ANIMATION_DURATION = 300; // Reduced from 500ms for snappier animations
 const FALL_DELAY = 30; // Reduced from 50ms for faster falling
 const MATCH_CHECK_DELAY = 200; // Delay before checking for matches after swap
